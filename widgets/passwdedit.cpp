@@ -59,14 +59,22 @@ void PassWdEdit::initUI() {
     setLayout(m_Layout);
     setGraphicsEffect(m_opacityEffect);
 
-    QTimer::singleShot(1000, this, SLOT(lineEditGrabKeyboard()));
+    m_getFocusTimer = new QTimer(this);
+    m_getFocusTimer->setInterval(100);
+    m_getFocusTimer->start();
+    connect(m_getFocusTimer,  &QTimer::timeout, this, &PassWdEdit::lineEditGrabKeyboard);
 
     updateStyle(":/skin/passwdedit.qss", this);
 
 }
 
 void PassWdEdit::lineEditGrabKeyboard() {
-    m_lineEdit->grabKeyboard();
+    if (m_timerCount == 10) {
+        m_getFocusTimer->stop();
+    } else {
+        m_timerCount++;
+        m_lineEdit->grabKeyboard();
+    }
 }
 void PassWdEdit::initConnect() {
     connect(m_iconButton, &DImageButton::clicked, this, &PassWdEdit::submit);
@@ -91,6 +99,7 @@ void PassWdEdit::focusInEvent(QFocusEvent *)
 
 bool PassWdEdit::eventFilter(QObject *o, QEvent *e)
 {
+
     if (o == m_lineEdit && (e->type() == QEvent::MouseButtonRelease ||
          e->type() == QEvent::KeyRelease)) {
 
@@ -101,14 +110,13 @@ bool PassWdEdit::eventFilter(QObject *o, QEvent *e)
 
             if (e->type() == QEvent::KeyRelease) {
                 QKeyEvent *event = static_cast<QKeyEvent*>(e);
-
+                qDebug() << "passwdedit:" << event->text();
                 if (event->text().length()==1 && event->key()!=Qt::Key_Escape &&
                         event->key() != Qt::Key_Tab) {
                     m_lineEdit->setText(event->text());
 
                     qDebug() << "m_lineEdit:" << m_lineEdit->text() << m_lineEdit->cursorPosition();
                 }
-
             }
         }
     }
@@ -195,7 +203,8 @@ void PassWdEdit::setAlert(bool alert, const QString &text)
 void PassWdEdit::keyReleaseEvent(QKeyEvent *e)
 {
     emit focusIn();
-    qDebug() << "e->key:" << e->key();
+
+    qDebug() << "PassWordEdit e->key:" << e->key();
     switch (e->key())
     {
     case Qt::Key_Return:        /* submit */
