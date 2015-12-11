@@ -20,29 +20,20 @@ LoginManager::LoginManager(QWidget* parent)
     m_passWdEdit->updateKeybordLayoutStatus(m_userWidget->currentUser());
     m_sessionWidget->switchToUser(m_userWidget->currentUser());
 
-    m_displayInter = new DBusDisplayManager("org.freedesktop.DisplayManager", "/org/freedesktop/DisplayManager", QDBusConnection::systemBus(), this);
-
-    // delay to expand
-    if (m_displayInter->isValid() && m_displayInter->sessions().count()) {
-        QMetaObject::invokeMethod(m_switchFrame, "triggerSwitchUser", Qt::QueuedConnection);
-        qDebug() << "m_displayInter:" << m_displayInter->isValid();
-    }
-
+    expandUserWidget();
 
     m_login1ManagerInterface =new DBusLogin1Manager("org.freedesktop.login1", "/org/freedesktop/login1", QDBusConnection::systemBus(), this);
     if (!m_login1ManagerInterface->isValid()) {
         qDebug() <<"m_login1ManagerInterface:" << m_login1ManagerInterface->lastError().type();
     }
-
 }
 
 LoginManager::~LoginManager()
 {
-
 }
-
 void LoginManager::initUI()
 {
+    setCursor(Qt::ArrowCursor);
     setFixedSize(qApp->desktop()->size());
     setObjectName("LoginManagerTool");
 
@@ -75,7 +66,6 @@ void LoginManager::initUI()
     m_Layout->addLayout(m_passWdEditLayout);
     m_Layout->addStretch();
     setLayout(m_Layout);
-
     showFullScreen();
 
     m_passWdEdit->updateKeyboardStatus();
@@ -134,6 +124,18 @@ void LoginManager::initConnect()
         }});
 
     connect(m_requireShutdownWidget, &ShutdownWidget::shutDownWidgetAction, this, &LoginManager::setShutdownAction);
+}
+
+void LoginManager::expandUserWidget() {
+    m_utilFile = new UtilFile(this);
+    int expandState = m_utilFile->getExpandState();
+    qDebug() << "expandState:" << expandState;
+    if (expandState == 1) {
+        qDebug() << "expandState:" << expandState;
+        QMetaObject::invokeMethod(m_switchFrame, "triggerSwitchUser", Qt::QueuedConnection);
+    }
+
+    m_utilFile->setExpandState(0);
 }
 
 void LoginManager::prompt(QString text, QLightDM::Greeter::PromptType type)
@@ -329,8 +331,8 @@ void LoginManager::keyboardLayoutUI() {
     xkbParse = new XkbParser(this);
     QStringList keyboardListContent =  xkbParse->lookUpKeyboardList(keyboardList);
 
-
     m_keybdLayoutWidget = new KbLayoutWidget(keyboardListContent);
+    m_keybdLayoutWidget->setListItemChecked(m_passWdEdit->utilSettings->currentListItemIndex);
 
     m_keybdArrowWidget = new DArrowRectangle(DArrowRectangle::ArrowTop, this);
     m_keybdArrowWidget->setBackgroundColor(QColor(0, 0, 0, 78));
@@ -347,12 +349,12 @@ void LoginManager::keyboardLayoutUI() {
 
     m_keybdArrowWidget->hide();
 
-    connect(m_keybdLayoutWidget, &KbLayoutWidget::setButtonClicked, this, &LoginManager::setCurrentKeyboardLayout);
+    connect(m_keybdLayoutWidget, &KbLayoutWidget::setButtonClicked, this, &LoginManager::setCurrentKeybdLayoutList);
     connect(m_keybdLayoutWidget, &KbLayoutWidget::setButtonClicked, m_keybdArrowWidget, &DArrowRectangle::hide);
 }
 
-void LoginManager::setCurrentKeyboardLayout(QString keyboard_value) {
-    qDebug() << "setCurrentKeyboardLayout";
+void LoginManager::setCurrentKeybdLayoutList(QString keyboard_value) {
+    qDebug() << "setCurrentKeybdLayoutList";
 
     QString keyboard_key = xkbParse->lookUpKeyboardKey(keyboard_value);
     qDebug() << "parse:" << keyboard_value << keyboard_value;
@@ -390,7 +392,7 @@ void LoginManager::setShutdownAction(const ShutdownWidget::Actions action) {
 }
 
 void LoginManager::leftKeyPressed() {
-    if (!m_userWidget->isHidden()) {
+    if (!m_userWidget->isHidden() && m_passWdEdit->getText().isEmpty()) {
         m_userWidget->leftKeySwitchUser();
     }
     if (!m_requireShutdownWidget->isHidden()) {
@@ -402,7 +404,7 @@ void LoginManager::leftKeyPressed() {
 }
 
 void LoginManager::rightKeyPressed() {
-    if (!m_userWidget->isHidden()) {
+    if (!m_userWidget->isHidden() && m_passWdEdit->getText().isEmpty()) {
         m_userWidget->rightKeySwitchUser();
     }
     if (!m_requireShutdownWidget->isHidden()) {
