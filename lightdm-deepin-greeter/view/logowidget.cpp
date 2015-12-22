@@ -47,9 +47,9 @@ void LogoWidget::initUI() {
 }
 
 QString LogoWidget::getVersion() {
-    QSettings settings("/etc/deepin-version", QSettings::IniFormat);
+    QSettings settings("/etc/lsb-release", QSettings::IniFormat);
     QString item = "Addition";
-    QString version = settings.value(item + "/Milestone").toString();
+    QString version = settings.value(item + "/DISTRIB_RELEASE").toString();
     qDebug() << "Deepin Version:" << version;
     return version;
 }
