@@ -13,7 +13,6 @@ public:
     ~LogoWidget();
 private:
     void initUI();
-    QString getVersion();
     QLabel* m_logoLabel;
     QLabel* m_logoVersionLabel;
     QVBoxLayout* m_logoLeftSideLayout;

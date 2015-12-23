@@ -1,7 +1,6 @@
 #include <QtCore/QObject>
 #include <QtCore/QFile>
 #include <QDebug>
-#include <QSettings>
 
 #include "logowidget.h"
 LogoWidget::LogoWidget(QWidget* parent)
@@ -16,7 +15,7 @@ void LogoWidget::initUI() {
     m_logoLabel->setObjectName("Logo");
     m_logoLabel->setFixedSize(150, 38);
 
-    m_logoVersionLabel = new QLabel;
+    m_logoVersionLabel = new QLabel("15.12");
     m_logoVersionLabel->setObjectName("LogoVersion");
 //    m_logoVersionLabel->setFixedWidth(30);
 
@@ -41,17 +40,6 @@ void LogoWidget::initUI() {
     m_logoLayout->addStretch();
     m_logoLayout->addLayout(m_logoRightSideLayout);
     setLayout(m_logoLayout);
-
-    QString systemVersion = getVersion();
-    m_logoVersionLabel->setText(systemVersion);
-}
-
-QString LogoWidget::getVersion() {
-    QSettings settings("/etc/lsb-release", QSettings::IniFormat);
-    QString item = "Addition";
-    QString version = settings.value(item + "/DISTRIB_RELEASE").toString();
-    qDebug() << "Deepin Version:" << version;
-    return version;
 }
 
 LogoWidget::~LogoWidget()
