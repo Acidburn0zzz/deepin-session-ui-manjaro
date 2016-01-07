@@ -42,20 +42,20 @@ void LogoWidget::initUI() {
 }
 
 QString LogoWidget::getVersion() {
-    QSettings settings("/etc/deepin-version", QSettings::IniFormat);
+    QSettings settings("/etc/manjaro-version", QSettings::IniFormat);
     settings.setIniCodec(QTextCodec::codecForName("utf8"));
     QString item = "Release";
     ///////////system version
-    QString version = settings.value(item + "/Version").toString();
+    QString version = settings.value(item + "/Release").toString();
     //////////system type
-    QString localKey =QString("%1/Type[%2]").arg(item).arg(QLocale::system().name());
-    QString finalKey =QString("%1/Type").arg(item);
+    QString localKey =QString("%1/Codename[%2]").arg(item).arg(QLocale::system().name());
+    QString finalKey =QString("%1/Codename").arg(item);
 
     QString type = settings.value(localKey, settings.value(finalKey)).toString();
     //////////system release version
-    QString milestone = settings.value("Addition/Milestone").toString();
+    QString milestone = settings.value("Addition/Suffix").toString();
 
-    qDebug() << "Deepin Version:" << version << type;
+    qDebug() << "Manjaro-Deepin Version:" << version << type;
 
     QString versionNumber = version + " " + type + " " + milestone;
     QFont versionFont; QFontMetrics fm(versionFont);
