@@ -3,6 +3,7 @@
 #include <QTextCodec>
 #include <QDebug>
 #include <QSettings>
+#include <QStringList>
 
 #include "logowidget.h"
 LogoWidget::LogoWidget(QWidget* parent)
@@ -42,22 +43,30 @@ void LogoWidget::initUI() {
 }
 
 QString LogoWidget::getVersion() {
-    QSettings settings("/etc/manjaro-version", QSettings::IniFormat);
-    settings.setIniCodec(QTextCodec::codecForName("utf8"));
-    QString item = "Release";
-    ///////////system version
-    QString version = settings.value(item + "/Release").toString();
-    //////////system type
-    QString localKey =QString("%1/Codename[%2]").arg(item).arg(QLocale::system().name());
-    QString finalKey =QString("%1/Codename").arg(item);
+    QString versionNumber;
 
-    QString type = settings.value(localKey, settings.value(finalKey)).toString();
-    //////////system release version
-    QString milestone = settings.value("Addition/Suffix").toString();
+    QFile lsbRelease( "/etc/lsb-release" );
+    if ( !lsbRelease.open( QIODevice::ReadOnly | QIODevice::Text ) )
+    {
+        versionNumber = "Manjaro Linux";
+    } else {
+        QString version = "Rolling";
+        QString codename = "Manjaro Linux";
+        QTextStream in( &lsbRelease );
+        while ( !in.atEnd() )
+        {
+            QString line = in.readLine();
+            if ( line.startsWith("DISTRIB_RELEASE="))
+                version = line.trimmed().split("=").value(1);
+            if ( line.startsWith("DISTRIB_CODENAME="))
+                codename = line.trimmed().split("=").value(1);
+        }
+        lsbRelease.close();
+        versionNumber = version + " " + codename;
+    }
 
-    qDebug() << "Manjaro-Deepin Version:" << version << type;
+    qDebug() << "Manjaro-Deepin Version: " << versionNumber;
 
-    QString versionNumber = version + " " + type + " " + milestone;
     QFont versionFont; QFontMetrics fm(versionFont);
     int width=fm.width(versionNumber);
     setFixedSize(150+width, 40);
